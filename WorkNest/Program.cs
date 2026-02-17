@@ -73,6 +73,7 @@ builder.Services.AddTransient<ExceptionMiddleware>();
 
 
 builder.Services.AddAuthorization();
+var jwtSettings = builder.Configuration.GetSection("Jwt");
 
 var app= builder.Build();
 
