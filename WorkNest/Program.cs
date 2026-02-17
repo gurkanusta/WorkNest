@@ -4,6 +4,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using WorkNest.Api.Middlewares;
+
+using Microsoft.AspNetCore.Authorization;
+using WorkNest.Api.Authorization;
 using WorkNest.Domain.Entities;
 using WorkNest.Infrastructure.Identity;
 using WorkNest.Infrastructure.Persistence;
@@ -101,7 +104,15 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 builder.Services.AddTransient<ExceptionMiddleware>();
 
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("ProjectMember", policy =>
+        policy.Requirements.Add(new ProjectMemberRequirement()));
+});
+
+builder.Services.AddScoped<IAuthorizationHandler, ProjectMemberHandler>();
+
+
 var jwtSettings = builder.Configuration.GetSection("Jwt");
 
 var app= builder.Build();

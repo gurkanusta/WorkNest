@@ -9,7 +9,7 @@ namespace WorkNest.Api.Controllers;
 
 [ApiController]
 [Route("api/projects/{projectId:guid}/tasks")]
-[Authorize]
+[Authorize(Policy = "ProjectMember")]
 public class TasksController : ControllerBase
 {
     private readonly AppDbContext _db;
