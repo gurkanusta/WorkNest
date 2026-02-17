@@ -111,9 +111,9 @@ if(app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<WorkNest.Api.Middlewares.ExceptionMiddleware>();
 app.UseHttpsRedirection();
-app.UseMiddleware<ExceptionMiddleware>();
+
 app.UseSerilogRequestLogging();
 
 

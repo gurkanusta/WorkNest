@@ -1,28 +1,42 @@
 ﻿using System.Net;
-using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 namespace WorkNest.Api.Middlewares;
 
-public class ExceptionMiddleware : IMiddleware
+public class ExceptionMiddleware
 {
-    public async Task InvokeAsync(HttpContext context, RequestDelegate next)
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+    private readonly IHostEnvironment _env;
+
+    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger, IHostEnvironment env)
+    {
+        _next = next;
+        _logger = logger;
+        _env = env;
+    }
+
+    public async Task Invoke(HttpContext context)
     {
         try
         {
-            await next(context);
+            await _next(context);
         }
         catch (Exception ex)
         {
-            context.Response.ContentType = "application/json";
-            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            _logger.LogError(ex, "Unhandled exception");
 
-            var payload = new
+            var problem = new ProblemDetails
             {
-                message = "An unexpected error occurred.",
-                detail = ex.Message
+                Title = "An error occurred",
+                Status = (int)HttpStatusCode.InternalServerError,
+                Detail = _env.IsDevelopment() ? ex.Message : "Unexpected server error.",
+                Instance = context.Request.Path
             };
 
-            await context.Response.WriteAsync(JsonSerializer.Serialize(payload));
+            context.Response.StatusCode = problem.Status.Value;
+            context.Response.ContentType = "application/problem+json";
+            await context.Response.WriteAsJsonAsync(problem);
         }
     }
 }
