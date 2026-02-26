@@ -1,0 +1,22 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+COPY ["WorkNest/WorkNest.csproj", "WorkNest/"]
+COPY ["WorkNest.Application/WorkNest.Application.csproj", "WorkNest.Application/"]
+COPY ["WorkNest.Domain/WorkNest.Domain.csproj", "WorkNest.Domain/"]
+COPY ["WorkNest.Infrastructure/WorkNest.Infrastructure.csproj", "WorkNest.Infrastructure/"]
+RUN dotnet restore "WorkNest/WorkNest.csproj"
+COPY . .
+WORKDIR "/src/WorkNest"
+RUN dotnet build "WorkNest.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "WorkNest.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "WorkNest.dll"]
